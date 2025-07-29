@@ -6,7 +6,9 @@
  */
 
 #include <iostream>
+#include <chrono>
 #include "dirhist/snapshot.h"
+#include "dirhist/serialize.h"
 
 int main(int argc, char *argv[]){
     // parse the command line instructions
@@ -15,6 +17,10 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    return dirhist::create_snapshot(argv[2])? 0: 2;
+    auto now = std::chrono::system_clock::now();  // 获取当前时间点
+    auto duration = now.time_since_epoch();       // 从纪元时间开始的时间间隔
+    auto timestamp = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+    std::unique_ptr<Node> tree = dirhist::build_tree(argv[2]);
+    dirhist::write_snapshot(*tree, timestamp.count(), ".dirhist");
     return 0;
 }
