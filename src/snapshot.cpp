@@ -19,6 +19,7 @@ namespace dirhist {
         fs::file_status st = fs::symlink_status(current_path);
         std::unique_ptr<Node> current_node = std::make_unique<Node>();
         current_node->path = current_path.lexically_relative(root).string();
+        current_node->abs_root = root.string();
         current_node->is_dir = fs::is_directory(current_path);
         current_node->is_symlink = st.type() == fs::file_type::symlink;
 
@@ -115,5 +116,60 @@ namespace dirhist {
         // 递归遍历目录，构建目录树
         return walk_dir(root_abs, root_abs);
     }
-}
 
+    void aux_display_tree(const std::unique_ptr<Node>& node, int level
+        , bool is_last, std::string prefix, int max_depth){
+        // 若指定了打印深度，且当前level大于max_depth
+        if (max_depth != -1 && level > max_depth) return;
+
+        // 根据当前节点是否为最后一个节点选择前缀
+        std::string connector = is_last? "└── " : "├── ";
+        std::string indent = prefix + (is_last ? "    " : "│   ");
+
+        // 打印当前节点
+        // 定义颜色
+        const std::string RESET_COLOR = "\033[0m";
+        const std::string DIR_COLOR = "\033[32m";  // 绿色
+        const std::string FILE_COLOR = "\033[31m"; // 红色
+        const std::string SYMLINK_COLOR = "\033[33m"; // 黄色
+
+        std::string color = RESET_COLOR;
+        if (node->is_dir && !node->is_symlink){
+            color = DIR_COLOR;
+        } else if (node->is_symlink) {
+            color = SYMLINK_COLOR;
+        } else {
+            color = FILE_COLOR;
+        }
+
+        std::cout << prefix << connector << color << node->path;
+        if (node->is_dir && !node->is_symlink){
+            std::cout << "[DIR]";
+        } else if (node->is_symlink) {
+            std::cout << "[SIMLINK]";
+        }
+        std::cout << RESET_COLOR << std::endl;
+
+        // 若为目录（符号链接除外）
+        if (node->is_dir && !node->is_symlink){
+            uint32_t children_cnt = node->children.size();
+            for (uint32_t i = 0; i < children_cnt; ++i){
+                // 确定是否为最后一个子节点
+                bool is_last_child = (i == children_cnt-1);
+                // 递归调用
+                aux_display_tree(node->children[i], level+1
+                                    , is_last_child, indent, max_depth);
+            }
+        }
+    }
+
+    void display_tree(const std::unique_ptr<Node>& root, int max_depth){
+        // 打印根目录所在绝对路径
+        std::cout << "[" << root->abs_root << "]" << std::endl;
+        
+        if (root->children.size())
+            aux_display_tree(root, 0, false, "", max_depth);
+        else aux_display_tree(root, 0, true, "", max_depth);
+        std::cout << "done." << std::endl;
+    }
+}

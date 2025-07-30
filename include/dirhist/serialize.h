@@ -64,12 +64,14 @@ namespace dirhist {
     // @brief 序列化目录树
     // @param root 目录树根节点指针
     // @param ts 时间戳
-    void write_snapshot(const Node& root, int64_t ts, const fs::path& output_dir);
+    void write_snapshot(const Node& root, int64_t ts
+                                , const fs::path& output_dir = "./.dirhist");
 
     // @brief 反序列化目录树
     // @param ts 时间戳
     // @param input_dir 文件输入目录
     // @return 返回读取到的目录树根节点指针
     // @note 该函数读取指定时间戳的快照文件，并返回根节点指针
-    std::unique_ptr<Node> read_snapshot(int64_t ts, const fs::path& input_dir);
+    std::unique_ptr<Node> read_snapshot(int64_t ts
+                                , const fs::path& input_dir = "./.dirhist");
 }
