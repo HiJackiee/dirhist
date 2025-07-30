@@ -65,7 +65,7 @@ namespace dirhist {
     // @param root 目录树根节点指针
     // @param ts 时间戳
     void write_snapshot(const Node& root, int64_t ts
-                                , const fs::path& output_dir = "./.dirhist");
+                                , const fs::path& output_dir = ".dirhist");
 
     // @brief 反序列化目录树
     // @param ts 时间戳
@@ -73,5 +73,16 @@ namespace dirhist {
     // @return 返回读取到的目录树根节点指针
     // @note 该函数读取指定时间戳的快照文件，并返回根节点指针
     std::unique_ptr<Node> read_snapshot(int64_t ts
-                                , const fs::path& input_dir = "./.dirhist");
+                                , const fs::path& input_dir = ".dirhist");
+
+    // @brief 反序列化目录树
+    // @param snapshot 待读取的快照文件路径
+    // @return 返回读取到的目录树根节点指针
+    // @note 该函数读取指定已存在的快照文件，并返回根节点指针
+    std::unique_ptr<Node> read_snapshot(const fs::path& snapshot);
+
+    // @brief 清空快照文件
+    // @param target_dir 待清空的快照文件目录
+    // @note 清空指定目录下的所有快照文件，snap-*.bin
+    void clean_snapshots(const fs::path& target_dir = ".dirhist");
 }

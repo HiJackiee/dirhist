@@ -1,6 +1,7 @@
 .vscode/
 build/
 test/
+.dirhist/
 LICENSE
 README.md
 src/test.cpp

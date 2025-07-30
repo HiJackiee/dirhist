@@ -6,6 +6,7 @@
  */
 
 #include "dirhist/serialize.h"
+#include "internal/util.h"
 
 namespace dirhist {
     void write_node(std::ofstream& ofs, const Node& node, uint64_t& offset) {
@@ -135,5 +136,45 @@ namespace dirhist {
         }
         
         return read_node(ifs, hdr.root_offset);
+    }
+
+    std::unique_ptr<Node> read_snapshot(const fs::path& snapshot) {
+        std::ifstream ifs(snapshot, std::ios::binary);
+        if (!ifs){
+            throw std::runtime_error("Error opening input file: " 
+                                                + snapshot.string());
+        }
+        
+        // 读取文件头，并作格式检查
+        Header hdr;
+        read(ifs, hdr);
+        if (hdr.magic != MAGIC || hdr.version != VERSION){
+            std::cerr << "Header.magic: " << hdr.magic << std::endl
+                      << "Header.version: " << hdr.version << std::endl;
+            throw std::runtime_error("Invaild snapshot format");
+        }
+        
+        return read_node(ifs, hdr.root_offset);
+    }
+
+    void clean_snapshots(const fs::path& target_dir){
+        std::error_code ec;
+        if (!std::filesystem::exists(target_dir, ec)) {
+            std::cerr << "Directory does not exist: " << target_dir << '\n';
+            return;
+        }
+
+        for (const auto& entry : std::filesystem::directory_iterator(target_dir, ec)) {
+            if (ec) continue;
+            if (is_snap_bin_file(entry.path())) {
+                std::filesystem::remove(entry.path(), ec);
+                if (!ec) {
+                    std::cout << "Removed: " << entry.path().filename() << '\n';
+                } else {
+                    std::cerr << "Failed to remove: " << entry.path() << '\n';
+                }
+            }
+        }
+        std::cout << "Clean done." << std::endl;
     }
 }

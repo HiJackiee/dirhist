@@ -107,7 +107,7 @@ namespace dirhist {
 
     std::unique_ptr<Node> build_tree(const fs::path& root){
         // 确保root为绝对路径
-        fs::path root_abs = fs::absolute(root);
+        fs::path root_abs = fs::canonical(fs::absolute(root));
         // 检查根目录是否存在
         if (!fs::exists(root_abs)){
             std::cerr << "Root path does not exist: " << root_abs << std::endl;
@@ -119,6 +119,10 @@ namespace dirhist {
 
     void aux_display_tree(const std::unique_ptr<Node>& node, int level
         , bool is_last, std::string prefix, int max_depth){
+        if (!node) {
+            std::cerr << "Tree node is nullptr" << std::endl;
+            return;
+        }
         // 若指定了打印深度，且当前level大于max_depth
         if (max_depth != -1 && level > max_depth) return;
 
@@ -164,6 +168,10 @@ namespace dirhist {
     }
 
     void display_tree(const std::unique_ptr<Node>& root, int max_depth){
+        if (!root) {
+            std::cerr << "Tree root is nullptr" << std::endl;
+            return;
+        }
         // 打印根目录所在绝对路径
         std::cout << "[" << root->abs_root << "]" << std::endl;
         
