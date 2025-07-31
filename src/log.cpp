@@ -6,6 +6,7 @@
  */
 #include <algorithm>
 #include "dirhist/log.h"
+#include "internal/util.h"
 
 namespace dirhist {
     void list_snapshots(int n, const fs::path& target_dir){
@@ -20,14 +21,13 @@ namespace dirhist {
         std::vector<LogEntry> entries;
         for (const auto& e: fs::directory_iterator(target_dir)){
             if(!e.is_regular_file()) continue;
-            if(!(e.path().filename().string().rfind("snap-", 0)==0)) continue;
+            if(!util::is_snap_bin_file(e.path())) continue;
 
             std::ifstream ifs(e.path());
             if (!ifs) {
                 throw std::runtime_error("Error opening snapshot file: "
                                             + e.path().string());
             }
-
             // 读取文件头
             Header hdr;
             read(ifs, hdr);
@@ -54,20 +54,14 @@ namespace dirhist {
         // 默认情况打印所有记录
         if (n == -1) {
             for (const auto& e: entries){
-                auto tp = std::chrono::system_clock
-                            ::time_point(std::chrono::milliseconds(e.timestamp));
-                std::time_t t = std::chrono::system_clock::to_time_t(tp);
-                std::cout << std::put_time(std::localtime(&t), "%F %T") << "  "
+                std::cout << util::ts_str(e.timestamp) << "  "
                           << std::left << std::setw(9) << e.file_size << "  "
                           << e.path << std::endl;
             }
         } else if (n >= 0) {
             for (int i = 0; i < n && i < entries.size(); ++i){
                 auto e = entries.at(i);
-                auto tp = std::chrono::system_clock
-                            ::time_point(std::chrono::milliseconds(e.timestamp));
-                std::time_t t = std::chrono::system_clock::to_time_t(tp);
-                std::cout << std::put_time(std::localtime(&t), "%F %T") << "  "
+                std::cout << util::ts_str(e.timestamp) << "  "
                           << std::left << std::setw(9) << e.file_size << "  "
                           << e.path << std::endl;
             }

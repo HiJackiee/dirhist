@@ -1,13 +1,61 @@
 /*
- * @file    src/log.cpp
- * @brief   This source file implements the functions for 'log' command.
+ * @file    src/diff.cpp
+ * @brief   This source file implements the functions for 'diff' command.
  * @author  yannn
  * @date    2025-07-28
  */
 
+#include <iostream>
+#include <algorithm>
 #include "dirhist/diff.h"
+#include "dirhist/log.h"
+#include "internal/util.h"
 
 namespace dirhist {
+    void print_colored_DiffEntry(const DiffEntry& entry) {
+        const char* color = nullptr;
+        char flag = '\0';
+
+        switch (entry.type) {
+            case ChangeType::Added: {
+                color = util::color::GREEN;
+                flag = '+';
+                break;
+            }
+            case ChangeType::Deleted: {
+                color = util::color::RED;
+                flag = '-';
+                break;
+            }
+            case ChangeType::Modified: {
+                color = util::color::YELLOW;
+                flag = 'M';
+                break;
+            }
+            default: {
+                std::cerr << "Unknown DiffEntry type" << std::endl;
+                return;
+            }
+        }
+
+        std::cout << color << flag << "  ";
+
+        if (entry.type == ChangeType::Added) {
+            std::cout << std::left << std::setw(19) << entry.new_size << " B  ";
+        }
+        else if (entry.type == ChangeType::Deleted) {
+            std::cout << std::left << std::setw(19) << entry.old_size << " B  ";
+        }
+        else {
+            std::cout << std::left << std::setw(8) << entry.old_size << "→"
+                  << std::setw(8) << entry.new_size << " B  ";
+        }
+        // path
+        std::cout << util::ts_str(
+            entry.type == ChangeType::Deleted? entry.old_mtime: entry.new_mtime)
+            << "  " << util::color::RESET << entry.path << std::endl;
+    }
+
     void mark_subtree(const Node& node, ChangeType type, std::vector<DiffEntry>& out) {
         // 无论内部节点还是叶子节点，都先处理自身
         // 增加的条目只需要记录当前的信息即可
@@ -37,7 +85,6 @@ namespace dirhist {
                                             , std::vector<DiffEntry>& out) {
         // 节点hash值相同，节点对应子树无变化
         if (old_node.hash == new_node.hash) return;
-        
         // 旧节点为叶子节点，而新节点为内部节点
         if (!(old_node.is_dir && !old_node.is_symlink) 
             && (new_node.is_dir && !new_node.is_symlink)) {
@@ -75,14 +122,17 @@ namespace dirhist {
             size_t i = 0, j = 0;
             size_t old_child_cnt = old_node.children.size();
             size_t new_child_cnt = new_node.children.size();
+
             while (i < old_child_cnt || j < new_child_cnt) {
                 if (i < old_child_cnt && (j == new_child_cnt 
                     || old_node.children[i]->path < new_node.children[j]->path)) {
                         mark_subtree(*old_node.children[i], ChangeType::Deleted, out);
+                        ++i;
                 }
                 else if (j < new_child_cnt && (i == old_child_cnt
                     || new_node.children[j]->path < old_node.children[i]->path)) {
                         mark_subtree(*new_node.children[j], ChangeType::Added, out);
+                        ++j;
                 }
                 else {
                     diff_nodes(*old_node.children[i], *new_node.children[j], out);
@@ -92,7 +142,56 @@ namespace dirhist {
         }
     }
 
-    void diff(const Node& old_node, const Node& new_node) {
+    void diff(const Node& old_root, const Node& new_root) {
+        std::vector<DiffEntry> out;
+        diff_nodes(old_root, new_root, out);
 
+        if (out.empty()) {
+            std::cout << "No changes." << std::endl;
+            return;
+        }
+
+        std::cout << "Changes between snapshots: " << std::endl;
+        for (const auto& e: out) {
+            print_colored_DiffEntry(e);
+        }
+    }
+
+    fs::path latest_snap(const fs::path& target_dir){
+        // 确保target_dir为绝对路径
+        fs::path target_abs = fs::absolute(target_dir);
+        // 检查根目录是否存在
+        if (!fs::exists(target_abs)){
+            std::cerr << "target path does not exist: " << target_abs << std::endl;
+            // 返回空路径
+            return {};
+        }
+
+        fs::path out;
+        int64_t max_ts = INT64_MIN;
+        for (const auto& e: fs::directory_iterator(target_dir)){
+            if(!e.is_regular_file()) continue;
+            if(!util::is_snap_bin_file(e.path())) continue;
+
+            std::ifstream ifs(e.path());
+            if (!ifs) {
+                throw std::runtime_error("Error opening snapshot file: "
+                                            + e.path().string());
+            }
+            // 读取文件头
+            Header hdr;
+            read(ifs, hdr);
+
+            // 检查文件头
+            if (hdr.magic != MAGIC || hdr.version != 1) continue;
+            if (hdr.timestamp > max_ts) {
+                out = e.path();
+                max_ts = hdr.timestamp;
+            }
+        }
+
+        // 当没有快照文件时
+        if (max_ts == INT64_MIN) return {};
+        return out;
     }
 }

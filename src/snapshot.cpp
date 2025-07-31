@@ -61,7 +61,7 @@ namespace dirhist {
                 std::unique_ptr<Node> child_node = walk_dir(entry.path(), root);
                 if (child_node) {
                     // 将子节点的哈希值拼接到当前节点数据中
-                    data += hash_to_str(child_node->hash);
+                    data += util::hash_to_str(child_node->hash);
                     // 累加子节点大小
                     total_size += child_node->size;
                     // 将子节点添加到当前节点的子节点列表中
@@ -70,7 +70,7 @@ namespace dirhist {
             }
             // 设置节点大小为所有子节点大小之和，并计算哈希值
             current_node->size = total_size;
-            current_node->hash = sha256(data);
+            current_node->hash = util::sha256(data);
         }
         // 处理符号链接（叶子节点）
         else if (current_node->is_symlink){
@@ -78,7 +78,7 @@ namespace dirhist {
                 // 将链接目标作为文件内容
                 std::string target_path = fs::read_symlink(current_path).string();
                 current_node->size = target_path.size();
-                current_node->hash = sha256(current_node->path + '\0' + target_path);
+                current_node->hash = util::sha256(current_node->path + '\0' + target_path);
             } catch (const fs::filesystem_error& e) {
                 std::cerr << "Error reading symlink: "
                           << e.what()<< "for path: "<< current_path << std::endl;
@@ -100,7 +100,7 @@ namespace dirhist {
             // 设置当前节点哈希值
             // 计算方式为 SHA256(path+‘\0’+raw_bytes)
             current_node->hash 
-                    = sha256(current_node->path + '\0' + std::move(ss).str());
+                    = util::sha256(current_node->path + '\0' + std::move(ss).str());
         }
         return current_node;
     }
@@ -132,10 +132,10 @@ namespace dirhist {
 
         // 打印当前节点
         // 定义颜色
-        const std::string RESET_COLOR = "\033[0m";
-        const std::string DIR_COLOR = "\033[32m";  // 绿色
-        const std::string FILE_COLOR = "\033[31m"; // 红色
-        const std::string SYMLINK_COLOR = "\033[33m"; // 黄色
+        const std::string RESET_COLOR = util::color::RESET;
+        const std::string DIR_COLOR = util::color::GREEN;  // 绿色
+        const std::string FILE_COLOR = util::color::RED; // 红色
+        const std::string SYMLINK_COLOR = util::color::YELLOW; // 黄色
 
         std::string color = RESET_COLOR;
         if (node->is_dir && !node->is_symlink){

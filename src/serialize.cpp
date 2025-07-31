@@ -166,7 +166,7 @@ namespace dirhist {
 
         for (const auto& entry : std::filesystem::directory_iterator(target_dir, ec)) {
             if (ec) continue;
-            if (is_snap_bin_file(entry.path())) {
+            if (util::is_snap_bin_file(entry.path())) {
                 std::filesystem::remove(entry.path(), ec);
                 if (!ec) {
                     std::cout << "Removed: " << entry.path().filename() << '\n';
