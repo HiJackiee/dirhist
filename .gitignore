@@ -1,9 +1,3 @@
 .vscode/
 build/
 .dirhist/
-test_dir/
-LICENSE
-README.md
-src/test.cpp
-include/dirhist/README.md
-CMakeLists.txt
