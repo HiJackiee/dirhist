@@ -10,6 +10,8 @@
 #include <array>
 #include <filesystem>
 #include <string>
+#include <vector>
+#include <algorithm>
 #include "internal/util.h"
 
 namespace util {
@@ -56,5 +58,35 @@ namespace util {
         std::ostringstream oss;
         oss << std::put_time(std::localtime(&t), "%F %T");
         return oss.str();
+    }
+
+    std::string trim(const std::string& str) {
+        size_t first = str.find_first_not_of(' ');
+        if (first == std::string::npos)
+            return ""; // 全部是空格
+        size_t last = str.find_last_not_of(' ');
+        return str.substr(first, (last - first + 1));
+    }
+
+    std::vector<std::string> split_by_comma(const std::string& str) {
+        std::vector<std::string> result;
+        std::string token;
+        std::istringstream stream(str);
+
+        while (std::getline(stream, token, ',')) {
+            // 去除前导和后导空格
+            token = trim(token);
+            if (token == "") continue;
+            result.push_back(token);
+        }
+
+        return result;
+    }
+
+    bool compare_paths(const fs::path& path1, const fs::path& path2){
+        fs::path path1_abs = fs::canonical(fs::absolute(path1));
+        fs::path path2_abs = fs::canonical(fs::absolute(path2));
+
+        return path1_abs == path2_abs;
     }
 }

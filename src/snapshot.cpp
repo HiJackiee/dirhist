@@ -118,11 +118,26 @@ namespace dirhist {
     }
 
     void aux_display_tree(const std::unique_ptr<Node>& node, int level
-        , bool is_last, std::string prefix, int max_depth){
+        , bool is_last, std::string prefix, int max_depth
+        , bool all, const std::vector<std::string>& no_list){
         if (!node) {
             std::cerr << "Tree node is nullptr" << std::endl;
             return;
         }
+
+        std::string path = node->path;
+        // 若为隐藏文件（夹）且all为false，忽略
+        if (!all && (path != "." && (util::start_with_prefix(path, ".")))){
+            return;
+        }
+
+        // 若文件（夹）路径在 no_list 中，忽略
+        for (const auto& it: no_list){
+            if (util::compare_paths(path, it)){
+                return;
+            }
+        }
+
         // 若指定了打印深度，且当前level大于max_depth
         if (max_depth != -1 && level > max_depth) return;
 
@@ -146,7 +161,7 @@ namespace dirhist {
             color = FILE_COLOR;
         }
 
-        std::cout << prefix << connector << color << node->path;
+        std::cout << prefix << connector << color << path;
         if (node->is_dir && !node->is_symlink){
             std::cout << "[DIR]";
         } else if (node->is_symlink) {
@@ -162,12 +177,13 @@ namespace dirhist {
                 bool is_last_child = (i == children_cnt-1);
                 // 递归调用
                 aux_display_tree(node->children[i], level+1
-                                    , is_last_child, indent, max_depth);
+                            , is_last_child, indent, max_depth, all, no_list);
             }
         }
     }
 
-    void display_tree(const std::unique_ptr<Node>& root, int max_depth){
+    void display_tree(const std::unique_ptr<Node>& root, int max_depth
+        , bool all, const std::vector<std::string>& no_list){
         if (!root) {
             std::cerr << "Tree root is nullptr" << std::endl;
             return;
@@ -176,8 +192,8 @@ namespace dirhist {
         std::cout << "[" << root->abs_root << "]" << std::endl;
         
         if (root->children.size())
-            aux_display_tree(root, 0, false, "", max_depth);
-        else aux_display_tree(root, 0, true, "", max_depth);
+            aux_display_tree(root, 0, false, "", max_depth, all, no_list);
+        else aux_display_tree(root, 0, true, "", max_depth, all, no_list);
         std::cout << "done." << std::endl;
     }
 }

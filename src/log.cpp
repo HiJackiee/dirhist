@@ -18,6 +18,17 @@ namespace dirhist {
             return;
         }
 
+        // 确保目标是目录
+        try {
+            fs::file_status status = fs::symlink_status(target_abs);
+            // 检查是否为目录且不是符号链接
+            if (!fs::is_directory(status) || status.type() == fs::file_type::symlink)
+                return;
+        } catch (const fs::filesystem_error& e) {
+            std::cerr << "Error: " << e.what() << '\n';
+            return;
+        }
+
         std::vector<LogEntry> entries;
         for (const auto& e: fs::directory_iterator(target_dir)){
             if(!e.is_regular_file()) continue;

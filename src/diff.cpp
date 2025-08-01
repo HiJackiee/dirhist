@@ -12,11 +12,11 @@
 #include "internal/util.h"
 
 namespace dirhist {
-    void print_colored_DiffEntry(const DiffEntry& entry) {
+    void print_colored_DiffEntry(const DiffEntry& de) {
         const char* color = nullptr;
         char flag = '\0';
 
-        switch (entry.type) {
+        switch (de.type) {
             case ChangeType::Added: {
                 color = util::color::GREEN;
                 flag = '+';
@@ -38,22 +38,26 @@ namespace dirhist {
             }
         }
 
-        std::cout << color << flag << "  ";
+        std::cout << color 
+                  << std::right << std::setw(4) << flag 
+                  << std::right << std::setw(22) 
+                  << util::ts_str(de.type == ChangeType::Deleted? 
+                            de.old_mtime: de.new_mtime);
 
-        if (entry.type == ChangeType::Added) {
-            std::cout << std::left << std::setw(19) << entry.new_size << " B  ";
+        if (de.type == ChangeType::Added) {
+            std::cout << std::right << std::setw(20) 
+                      << de.new_size << std::string(23, ' ');
         }
-        else if (entry.type == ChangeType::Deleted) {
-            std::cout << std::left << std::setw(19) << entry.old_size << " B  ";
+        else if (de.type == ChangeType::Deleted) {
+            std::cout << std::right << std::setw(20) 
+                      << de.old_size << std::string(23, ' ');
         }
         else {
-            std::cout << std::left << std::setw(8) << entry.old_size << "→"
-                  << std::setw(8) << entry.new_size << " B  ";
+            std::cout << std::right << std::setw(20) << de.old_size << " → "
+                      << std::left << std::setw(20) << de.new_size;
         }
-        // path
-        std::cout << util::ts_str(
-            entry.type == ChangeType::Deleted? entry.old_mtime: entry.new_mtime)
-            << "  " << util::color::RESET << entry.path << std::endl;
+
+        std::cout << de.path << util::color::RESET << std::endl;
     }
 
     void mark_subtree(const Node& node, ChangeType type, std::vector<DiffEntry>& out) {
@@ -150,8 +154,12 @@ namespace dirhist {
             std::cout << "No changes." << std::endl;
             return;
         }
-
         std::cout << "Changes between snapshots: " << std::endl;
+        std::cout << std::right << std::setw(4) << "type"
+                  << std::right << std::setw(22) << "time"
+                  << std::right << std::setw(20) << "size[B]"
+                  << std::left << std::setw(23) << ""
+                  << "path" << std::endl;
         for (const auto& e: out) {
             print_colored_DiffEntry(e);
         }

@@ -45,11 +45,17 @@ namespace dirhist {
     // @param is_last 是否为最后一个子节点
     // @param prefix 当前节点的缩进前缀，默认为空字符串
     // @param max_depth 最大打印目录结构深度
+    // @param all 是否打印所有文件（夹），为true时忽略隐藏文件（夹）
+    // @param no_list 不打印的文件（夹）
     void aux_display_tree(const std::unique_ptr<Node>& node, int level = 0
-        , bool is_last = false, std::string prefix = "", int max_depth = -1);
+        , bool is_last = false, std::string prefix = "", int max_depth = -1
+        , bool all = false, const std::vector<std::string>& no_list = {});
 
     // @brief 可视化目录结构
     // @param root 目录树根节点指针，引用方式不会获取所有权
     // @param max_depth 打印目录结构的深度，默认为-1时打印所有层级
-    void display_tree(const std::unique_ptr<Node>& root, int max_depth = -1);
+    // @param all 是否打印所有文件（夹），为true时忽略隐藏文件（夹）
+    // @param no_list 不打印的文件（夹）
+    void display_tree(const std::unique_ptr<Node>& root, int max_depth = -1
+        , bool all = false, const std::vector<std::string>& no_list = {});
 }

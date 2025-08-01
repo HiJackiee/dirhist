@@ -158,6 +158,7 @@ namespace dirhist {
     }
 
     void clean_snapshots(const fs::path& target_dir){
+        std::cout << "clean all snapshots at:" << target_dir << std::endl;
         std::error_code ec;
         if (!std::filesystem::exists(target_dir, ec)) {
             std::cerr << "Directory does not exist: " << target_dir << '\n';

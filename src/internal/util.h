@@ -54,4 +54,19 @@ namespace util {
     // @param ts 待转换时间戳
     // @return 返回可读字符串
     std::string ts_str(int64_t ts);
+
+    // @brief 去除前导和后导空格
+    // @return 返回处理后的字符串
+    std::string trim(const std::string& str);
+
+    // @brief 解析以逗号分隔的字符串并返回子串集合
+    // @param str 待解析字符串
+    // @result 返回解析后的子串集合
+    std::vector<std::string> split_by_comma(const std::string& str);
+
+    // @brief 比较两个路径（绝对或相对）是否相同
+    // @param path1
+    // @param path2
+    // @return 相同返回true，否则false
+    bool compare_paths(const fs::path& path1, const fs::path& path2);
 }
