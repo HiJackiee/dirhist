@@ -57,6 +57,7 @@ make
 # --all=true|false  是否显示隐藏文件
 # --no=xxx,yyy      忽略指定文件/目录（逗号分隔）
 ```
+![tree](graph/tree.png)
 
 ### 3. 查看快照历史
 
@@ -65,12 +66,16 @@ make
 ```
 - `--num` 指定显示最近 n 条记录，默认全部。
 
+![alt text](graph/log.png)
+
 ### 4. 对比快照差异
 
 ```bash
 ./dirhist diff --old_snap=<旧快照> [--new_snap=<新快照>] [--dir=<快照目录>]
 ```
 - 若不指定 `--new_snap`，默认对比最新快照。
+
+![alt text](graph/diff.png)
 
 ### 5. 清理快照
 
@@ -81,14 +86,49 @@ make
 ## 目录结构
 
 ```
-.
-├── include/         # 头文件
-├── src/             # 源码
-├── test/            # 单元测试
-├── CMakeLists.txt   # 构建脚本
-└── README.md
+[/home/yannn/workspace/cpps/dirhist]
+├── .[DIR]
+│   ├── .dirhist[DIR]
+│   │   ├── .dirhist/snap-1754058908609.bin
+│   │   └── .dirhist/snap-1754058992710.bin
+│   ├── .gitignore
+│   ├── CMakeLists.txt
+│   ├── LICENSE
+│   ├── README.md
+│   ├── bin[DIR]
+│   │   └── bin/dirhist
+│   ├── docs[DIR]
+│   ├── graph[DIR]
+│   │   ├── graph/diff.png
+│   │   ├── graph/log.png
+│   │   ├── graph/project_tree.png
+│   │   └── graph/tree.png
+│   ├── include[DIR]
+│   │   └── include/dirhist[DIR]
+│   │       ├── include/dirhist/cli.h
+│   │       ├── include/dirhist/diff.h
+│   │       ├── include/dirhist/log.h
+│   │       ├── include/dirhist/serialize.h
+│   │       └── include/dirhist/snapshot.h
+│   ├── src[DIR]
+│   │   ├── src/cli.cpp
+│   │   ├── src/diff.cpp
+│   │   ├── src/internal[DIR]
+│   │   │   └── src/internal/util.h
+│   │   ├── src/log.cpp
+│   │   ├── src/main.cpp
+│   │   ├── src/serialize.cpp
+│   │   ├── src/snapshot.cpp
+│   │   └── src/util.cpp
+│   ├── test[DIR]
+│   │   ├── test/README.md
+│   │   ├── test/test_diff.cpp
+│   │   ├── test/test_serialize.cpp
+│   │   ├── test/test_snapshot.cpp
+│   │   └── test/test_util.cpp
+done.
 ```
-
+![alt text](graph/project_tree.png)
 ## 进阶用法
 
 - 支持自定义快照目录、快照文件名。
